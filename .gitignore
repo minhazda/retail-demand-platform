@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+data/
+models/challenger*
+models/champion.joblib
+dbt_project/target/
+dbt_project/dbt_packages/
+dbt_project/logs/
+.dagster_home/
