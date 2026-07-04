@@ -1,0 +1,13 @@
+name: retail_platform
+version: "1.0.0"
+profile: retail_platform
+
+model-paths: ["models"]
+test-paths: ["tests"]
+
+models:
+  retail_platform:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

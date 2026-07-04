@@ -1,0 +1,56 @@
+name: Weekly retrain (real data)
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"  # Mondays 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt && pip install -e .
+      - name: Cache raw dataset
+        uses: actions/cache@v4
+        with:
+          path: data/raw_cache.parquet
+          key: online-retail-ii-v1
+      - name: dbt deps
+        run: |
+          cd dbt_project
+          dbt deps --profiles-dir .
+      - name: Materialize the asset graph
+        run: |
+          dagster asset materialize --select "*" -m retail_platform.definitions
+      - name: Upload model + metrics
+        uses: actions/upload-artifact@v4
+        with:
+          name: challenger-${{ github.run_id }}
+          path: |
+            models/challenger.json
+            models/challenger.joblib
+      - name: Commit champion metrics on promotion
+        run: |
+          if ! git diff --quiet models/champion.json 2>/dev/null; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add models/champion.json
+            git commit -m "Promote challenger to champion [skip ci]"
+            git push
+          else
+            echo "No promotion: champion unchanged."
+          fi
+      - name: Job summary
+        run: |
+          echo "## Retrain result" >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat models/challenger.json >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"

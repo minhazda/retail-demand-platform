@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    tables:
+      - name: transactions
+        description: Raw UCI Online Retail II rows loaded by the Dagster ingest asset.
+        columns:
+          - name: invoice
+            tests: [not_null]
+          - name: quantity
+            tests: [not_null]
+          - name: price
+            tests: [not_null]
+          - name: invoice_ts
+            tests: [not_null]

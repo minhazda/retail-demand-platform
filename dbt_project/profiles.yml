@@ -1,0 +1,7 @@
+retail_platform:
+  target: local
+  outputs:
+    local:
+      type: duckdb
+      path: "{{ env_var('RDP_DUCKDB_PATH', '../data/warehouse.duckdb') }}"
+      threads: 4
