@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: fct_daily_sales
+    description: Daily units/revenue per top-50 product; the model training table.
+    columns:
+      - name: stock_code
+        tests: [not_null]
+      - name: invoice_date
+        tests: [not_null]
+      - name: units_sold
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [stock_code, invoice_date]
+
+  - name: dim_product
+    columns:
+      - name: stock_code
+        tests: [not_null, unique]
+
+  - name: stg_transactions
+    columns:
+      - name: quantity
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 1
+      - name: price
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
