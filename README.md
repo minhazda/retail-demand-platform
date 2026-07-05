@@ -37,6 +37,18 @@ every Monday on the real dataset (1M+ transactions).
 - **CI never depends on a flaky download.** The end-to-end CI run uses a
   synthetic dataset with real weekly seasonality; only the scheduled retrain
   touches the real source (mirror-first, UCI fallback, cached).
+- **The feature logic scales past one machine — provably.**
+  `spark_features.py` expresses the same leakage-safe lag/rolling features in
+  PySpark's window API, and a parity suite pins both implementations to
+  identical output (to 1e-9, including calendar gaps, the short-series
+  cutoff, and pandas↔Spark day-of-week conventions). Honest framing: at this
+  dataset's ~1M rows pandas wins on simplicity and speed — the Spark twin
+  exists for the input size where that stops being true, and the parity test
+  is what makes swapping it in safe. CI runs it on a real JVM per push.
+- **Orchestrator concepts, not orchestrator lock-in.** The graph is Dagster
+  assets here; [docs/dagster-to-airflow.md](docs/dagster-to-airflow.md) maps
+  each asset onto its Airflow equivalent (DAG/task/dataset/sensor) — the
+  design carries over even where the API doesn't.
 
 ## Run it
 
@@ -58,6 +70,7 @@ dagster asset materialize --select "*" -m retail_platform.definitions  # real ru
 | `dbt_project/` | staging + marts SQL, sources, data tests (dbt-duckdb) |
 | `src/retail_platform/training.py` | challenger training vs seasonal-naive baseline |
 | `src/retail_platform/promotion.py` | champion/challenger gate |
+| `src/retail_platform/spark_features.py` | PySpark twin of the feature frame, parity-tested against pandas |
 | `.github/workflows/retrain.yml` | Monday cron: real data, artifact upload, champion commit |
 
 Dataset: UCI Online Retail II (CC BY 4.0), fetched mirror-first for
