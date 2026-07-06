@@ -1,7 +1,5 @@
 """Dagster asset graph: ingest -> dbt (transform + test) -> train -> gate."""
 
-from __future__ import annotations
-
 import duckdb
 import pandas as pd
 from dagster import AssetExecutionContext, MaterializeResult, MetadataValue, asset
